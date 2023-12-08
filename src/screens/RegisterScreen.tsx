@@ -144,7 +144,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 25,
     paddingVertical: 10,
     borderRadius: 20,
-    backgroundColor: "#fff", // Cambia esto al color de fondo que prefieras
+    backgroundColor: "#fff",
     shadowColor: "#000",
     shadowOffset: {
       width: 0,

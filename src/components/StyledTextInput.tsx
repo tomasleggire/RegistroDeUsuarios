@@ -26,7 +26,9 @@ export default function StyledTextInput({
     ? styles.focusedInputLabel
     : styles.unfocusedInputLabel;
 
+  //Si el desarrollador quiere un input con mas detalles (Completo, incompleto, label), define en la propiedad details con un boolean.
   if (details) {
+    //Input con details
     return (
       <View style={styles.inputContainer}>
         <Text style={inputLabelStyle}>{label}</Text>
@@ -46,6 +48,7 @@ export default function StyledTextInput({
       </View>
     );
   } else {
+    //Input sin details
     return (
       <View style={styles.inputContainer}>
         <TextInput

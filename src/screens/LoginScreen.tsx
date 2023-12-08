@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import {
   Pressable,
   Text,
-  TextInput,
   View,
   StyleSheet,
   ImageBackground,
@@ -26,12 +25,13 @@ export default function LoginScreen({ navigation }: Props) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  //Verifica si el usuario esta logueado para redirigirlo al HomeScreen
   useEffect(() => {
     const checkUser = async () => {
       try {
         const userData = await AsyncStorage.getItem("@user");
         if (userData !== null && userData !== "null") {
-          goToHomeScreen();
+          navigation.navigate("Home");
         }
       } catch (error) {
         console.error("Error al obtener el usuario:", error);
@@ -39,14 +39,6 @@ export default function LoginScreen({ navigation }: Props) {
     };
     checkUser();
   }, []);
-
-  const goToRegisterScreen = () => {
-    navigation.navigate("Register");
-  };
-
-  const goToHomeScreen = () => {
-    navigation.navigate("Home");
-  };
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -62,7 +54,6 @@ export default function LoginScreen({ navigation }: Props) {
         ToastAndroid.show(data.message, ToastAndroid.SHORT);
       } else {
         // Guarda el id del usuario en AsyncStorage
-        //console.log(data.usuarioEncontrado.id);
         try {
           await AsyncStorage.setItem(
             "@user",
@@ -121,7 +112,7 @@ export default function LoginScreen({ navigation }: Props) {
 
         <View style={styles.registerLinkContainer}>
           <Text>¿No tienes cuenta?</Text>
-          <Pressable onPress={goToRegisterScreen}>
+          <Pressable onPress={() => navigation.navigate("Register")}>
             <Text style={styles.registerButton}>Registrate</Text>
           </Pressable>
         </View>
@@ -146,7 +137,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: "center",
     width: "75%",
-    backgroundColor: Colors.white, // Cambia esto al color de fondo que prefieras
+    backgroundColor: Colors.white,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -176,7 +167,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 10,
     marginTop: 15,
-    backgroundColor: Colors.secondary, // Cambia esto al color de fondo que prefieras
+    backgroundColor: Colors.secondary,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,

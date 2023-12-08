@@ -19,7 +19,6 @@ export default function HomeScreen({ navigation }: Props) {
   const handleSingOut = async () => {
     try {
       // Establece el valor de "@user" en AsyncStorage a null,
-      // lo que efectivamente borra los datos del usuario actual.
       await AsyncStorage.setItem("@user", JSON.stringify(null));
 
       // Redirige al usuario a la pantalla de inicio de sesión.
