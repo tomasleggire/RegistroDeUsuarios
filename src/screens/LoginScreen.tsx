@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Pressable,
   Text,
@@ -6,12 +6,18 @@ import {
   View,
   StyleSheet,
   ImageBackground,
+  ToastAndroid,
 } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { loginUser } from "../api/auth.api";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import Colors from "../assets/Colors";
+import StyledTextInput from "../components/StyledTextInput";
 
 type RootStackParamList = {
   Login: undefined;
   Register: undefined;
+  Home: undefined;
 };
 
 type Props = NativeStackScreenProps<RootStackParamList, "Login">;
@@ -20,72 +26,96 @@ export default function LoginScreen({ navigation }: Props) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  useEffect(() => {
+    const checkUser = async () => {
+      try {
+        const userData = await AsyncStorage.getItem("@user");
+        if (userData !== null && userData !== "null") {
+          goToHomeScreen();
+        }
+      } catch (error) {
+        console.error("Error al obtener el usuario:", error);
+      }
+    };
+    checkUser();
+  }, []);
+
   const goToRegisterScreen = () => {
     navigation.navigate("Register");
   };
 
-  const loginUser = async () => {
-    try {
-      const response = await fetch("http://localhost:8080/usuarios/signup", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: email,
-          contrasenia: password,
-        }),
-      });
-
-      const data = await response.json();
-      console.log(data);
-    } catch (error) {
-      console.error(error);
-    }
+  const goToHomeScreen = () => {
+    navigation.navigate("Home");
   };
 
-  const getUsers = async () => {
+  const handleLogin = async () => {
+    if (!email || !password) {
+      ToastAndroid.show(
+        "Los campos no pueden estar vacios",
+        ToastAndroid.SHORT
+      );
+      return;
+    }
     try {
-      const response = await fetch(`http://localhost:8080/usuarios`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      const data = await response.json();
-      console.log(data);
+      const data = await loginUser(email, password);
+      if (typeof data.message == "string") {
+        ToastAndroid.show(data.message, ToastAndroid.SHORT);
+      } else {
+        // Guarda el id del usuario en AsyncStorage
+        //console.log(data.usuarioEncontrado.id);
+        try {
+          await AsyncStorage.setItem(
+            "@user",
+            JSON.stringify(data.usuarioEncontrado.id)
+          );
+          setEmail(""); // Resetea el campo de correo electrónico
+          setPassword(""); // Resetea el campo de contraseña
+          navigation.reset({
+            index: 0,
+            routes: [{ name: "Home" }],
+          });
+        } catch (error) {
+          console.error("Error al guardar el usuario:", error);
+        }
+      }
     } catch (error) {
       console.error(error);
+      ToastAndroid.show(
+        "Ocurrio un error, vuelva a intentarlo",
+        ToastAndroid.SHORT
+      );
     }
   };
 
   return (
     <ImageBackground
       style={styles.containerLoginForm}
-      source={{
-        uri: "https://img.freepik.com/free-vector/abstract-blur-blue-pink-gradient-background-design_53876-136695.jpg?size=626&ext=jpg&ga=GA1.1.240383335.1690498541&semt=ais",
-      }}
+      source={require("../assets/loginScreenBg.jpg")}
     >
       <View style={styles.loginForm}>
         <Text style={styles.titleLogin}>Iniciar sesión</Text>
         <View style={styles.loginFormInputs}>
           <Text style={styles.labelInput}>Email</Text>
-          <TextInput
+          <StyledTextInput
+            label="Email"
+            setNewValue={setEmail}
+            placeholder="ejemplo@mail.com"
+            isComplete={email.length == 0 ? false : true}
+            details={false}
             value={email}
-            placeholder="ejemplo@email.com"
-            onChangeText={(newEmail) => setEmail(newEmail)}
-            style={styles.textInput}
           />
           <Text style={styles.labelInput}>Contraseña</Text>
-          <TextInput
-            value={password}
+          <StyledTextInput
+            label="Contraseña"
+            setNewValue={setPassword}
             placeholder="abc123"
-            onChangeText={(newPassword) => setPassword(newPassword)}
-            style={styles.textInput}
+            isComplete={password.length == 0 ? false : true}
+            secureTextEntry={true}
+            details={false}
+            value={password}
           />
         </View>
-        <Pressable style={styles.loginButton} onPress={getUsers}>
+        <Pressable style={styles.loginButton} onPress={handleLogin}>
           <Text style={styles.textLoginButton}>Iniciar sesión</Text>
         </Pressable>
 
@@ -107,47 +137,57 @@ export default function LoginScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   containerLoginForm: {
     flex: 1,
-    backgroundColor: "#b33e82",
     alignItems: "center",
     justifyContent: "center",
   },
   loginForm: {
-    backgroundColor: "white",
     paddingHorizontal: 30,
     paddingVertical: 15,
-    borderRadius: 10,
+    borderRadius: 20,
     alignItems: "center",
-    width: "70%",
+    width: "75%",
+    backgroundColor: Colors.white, // Cambia esto al color de fondo que prefieras
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   loginFormInputs: {
     alignSelf: "flex-start",
     width: "100%",
+    gap: 3,
   },
   titleLogin: {
     fontSize: 24,
     fontWeight: "500",
-    color: "#8f898e",
+    color: Colors.grayText,
     marginBottom: 15,
   },
   labelInput: {
-    fontSize: 14,
-    color: "#f07ab5",
-  },
-  textInput: {
-    height: 40,
-    paddingHorizontal: 10,
-    borderRadius: 5,
-    backgroundColor: "#e0dedf",
-    marginBottom: 12,
+    fontSize: 16,
+    color: Colors.secondary,
   },
   loginButton: {
-    backgroundColor: "#f07ab5",
     paddingHorizontal: 30,
     paddingVertical: 10,
     borderRadius: 10,
+    marginTop: 15,
+    backgroundColor: Colors.secondary, // Cambia esto al color de fondo que prefieras
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   textLoginButton: {
-    color: "white",
+    color: Colors.white,
   },
   registerLinkContainer: {
     display: "flex",
@@ -158,16 +198,16 @@ const styles = StyleSheet.create({
     marginTop: 30,
   },
   registerButton: {
-    color: "#f07ab5",
+    color: Colors.secondary,
     textDecorationLine: "underline",
   },
   textCondicionesContainter: {
     textAlign: "center",
     marginTop: 10,
-    color: "gray",
+    color: Colors.grayText,
   },
   textCondiciones: {
-    color: "black",
+    color: Colors.grayText,
     fontWeight: "bold",
   },
 });

@@ -3,5 +3,5 @@
   "compilerOptions": {
     "strict": true
   },
-  "include": ["**/*.ts", "**/*.tsx", "src/logic/LoginLogic.js"]
+  "include": ["**/*.ts", "**/*.tsx"]
 }
